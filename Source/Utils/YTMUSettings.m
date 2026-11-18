@@ -156,9 +156,9 @@ NSDictionary<NSString *, id> *YTMUSettingsBuiltInDefaults(void) {
             // Audio / video mode
             @"audioVideoMode": @0,
             // Lyrics
-            @"syncedLyricsEnabled": @NO,
-            @"bilingualLyrics": @NO,
-            @"lyricsTranslationEnabled": @NO,
+            @"syncedLyricsEnabled": @YES,
+            @"bilingualLyrics": @YES,
+            @"lyricsTranslationEnabled": @YES,
             @"lyricsPreferredSource": @"auto",
             @"lyricsShowInexact": @YES,
             @"lyricsRomanization": @YES,
@@ -173,7 +173,7 @@ NSDictionary<NSString *, id> *YTMUSettingsBuiltInDefaults(void) {
             @"lyricsFocusBlur": @YES,
             // Translation
             @"translationProvider": @"google-translate",
-            @"translationTargetLang": @"auto",
+            @"translationTargetLang": @"ar",
             @"translationBaseUrl": @"https://api.openai.com/v1",
             @"translationDebugLogs": @NO,
         };
