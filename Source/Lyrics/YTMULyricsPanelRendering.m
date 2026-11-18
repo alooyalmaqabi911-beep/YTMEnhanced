@@ -208,6 +208,8 @@ NSString *YTMULyricsPageAttributionText(void) {
     if (lyricsProvider.length) [parts addObject:[NSString stringWithFormat:YTMULyricsPageLocalized(@"LYRICS_ATTRIBUTION_LYRICS_FORMAT", @"Lyrics via %@"), lyricsProvider]];
     if (manager.translatedLines.count) {
         [parts addObject:[NSString stringWithFormat:YTMULyricsPageLocalized(@"LYRICS_ATTRIBUTION_TRANSLATION_FORMAT", @"Translated via %@"), translationProvider]];
+    } else if (manager.translationErrorMessage.length) {
+        [parts addObject:[NSString stringWithFormat:YTMULyricsPageLocalized(@"TRANSLATION_ERROR_FORMAT", @"Translation unavailable: %@"), manager.translationErrorMessage]];
     }
     return [parts componentsJoinedByString:@" · "];
 }

@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "โมเดลใช้งานได้";
 "TRANSLATION_TEST_FAILED" = "ทดสอบไม่สำเร็จ";
 "TRANSLATION_TEST_NO_PROVIDER" = "เลือกผู้ให้บริการและกรอกคีย์ API ก่อน";
+
+"TRANSLATION_TEST_GOOGLE" = "ทดสอบการแปล";
+"TRANSLATION_ERROR_FORMAT" = "ไม่สามารถแปลได้: %@";

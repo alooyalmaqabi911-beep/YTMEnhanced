@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "Modelis veikia";
 "TRANSLATION_TEST_FAILED" = "Patikrinimas nepavyko";
 "TRANSLATION_TEST_NO_PROVIDER" = "Pirma pasirinkite tiekėją ir įveskite API raktą";
+
+"TRANSLATION_TEST_GOOGLE" = "Tikrinti vertimą";
+"TRANSLATION_ERROR_FORMAT" = "Vertimas nepasiekiamas: %@";

@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "Modell funktioniert";
 "TRANSLATION_TEST_FAILED" = "Test fehlgeschlagen";
 "TRANSLATION_TEST_NO_PROVIDER" = "Wähle zuerst einen Anbieter und gib einen API-Schlüssel ein";
+
+"TRANSLATION_TEST_GOOGLE" = "Übersetzung testen";
+"TRANSLATION_ERROR_FORMAT" = "Übersetzung nicht verfügbar: %@";

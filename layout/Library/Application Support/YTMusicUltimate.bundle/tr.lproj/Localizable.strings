@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "Model çalışıyor";
 "TRANSLATION_TEST_FAILED" = "Test başarısız";
 "TRANSLATION_TEST_NO_PROVIDER" = "Önce bir sağlayıcı seç ve API anahtarı gir";
+
+"TRANSLATION_TEST_GOOGLE" = "Çeviriyi test et";
+"TRANSLATION_ERROR_FORMAT" = "Çeviri kullanılamıyor: %@";

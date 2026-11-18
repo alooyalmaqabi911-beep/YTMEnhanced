@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "モデルは正常です";
 "TRANSLATION_TEST_FAILED" = "テスト失敗";
 "TRANSLATION_TEST_NO_PROVIDER" = "先にプロバイダーを選び API キーを入力してください";
+
+"TRANSLATION_TEST_GOOGLE" = "翻訳をテスト";
+"TRANSLATION_ERROR_FORMAT" = "翻訳を利用できません: %@";

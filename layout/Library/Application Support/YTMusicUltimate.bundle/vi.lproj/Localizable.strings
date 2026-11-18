@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "Mô hình hoạt động";
 "TRANSLATION_TEST_FAILED" = "Kiểm tra thất bại";
 "TRANSLATION_TEST_NO_PROVIDER" = "Chọn nhà cung cấp và nhập khóa API trước";
+
+"TRANSLATION_TEST_GOOGLE" = "Kiểm tra bản dịch";
+"TRANSLATION_ERROR_FORMAT" = "Không thể dịch: %@";

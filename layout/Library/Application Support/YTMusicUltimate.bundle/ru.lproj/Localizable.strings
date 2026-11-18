@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "Модель работает";
 "TRANSLATION_TEST_FAILED" = "Проверка не удалась";
 "TRANSLATION_TEST_NO_PROVIDER" = "Сначала выберите провайдера и введите ключ API";
+
+"TRANSLATION_TEST_GOOGLE" = "Проверить перевод";
+"TRANSLATION_ERROR_FORMAT" = "Перевод недоступен: %@";

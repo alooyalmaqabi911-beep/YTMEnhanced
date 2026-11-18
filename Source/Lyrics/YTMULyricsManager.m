@@ -27,6 +27,7 @@ static NSString *YTMULyricsManagerLocalized(NSString *key, NSString *fallback) {
 @property (nonatomic, strong, readwrite) YTMULyricsResult *currentResult;
 @property (nonatomic, copy, readwrite) NSArray<NSString *> *translatedLines;
 @property (nonatomic, copy, readwrite) NSString *translationAttribution;
+@property (nonatomic, copy, readwrite) NSString *translationErrorMessage;
 @property (nonatomic, copy, readwrite) NSString *lastErrorMessage;
 @property (nonatomic, copy, readwrite) NSDictionary<NSString *, NSString *> *sourceAvailability;
 @property (nonatomic) NSUInteger requestGeneration;
@@ -133,6 +134,7 @@ typedef void (^YTMULyricsTryProvidersCompletion)(YTMULyricsResult *_Nullable res
         _activeVideoId = @"";
         _translatedLines = @[];
         _translationAttribution = @"";
+        _translationErrorMessage = @"";
         _lastErrorMessage = @"";
         _sourceAvailability = @{};
         _providerBudgetSeconds = 20.0;
@@ -242,6 +244,7 @@ typedef void (^YTMULyricsTryProvidersCompletion)(YTMULyricsResult *_Nullable res
     self.currentResult = nil;
     self.translatedLines = @[];
     self.translationAttribution = @"";
+    self.translationErrorMessage = @"";
     self.lastErrorMessage = @"";
     self.sourceAvailability = @{};
     [self notify];
@@ -471,9 +474,11 @@ typedef void (^YTMULyricsTryProvidersCompletion)(YTMULyricsResult *_Nullable res
 }
 
 - (void)fetchTranslationForInfo:(YTMULyricsSearchInfo *)info generation:(NSUInteger)generation {
+    self.translationErrorMessage = @"";
     if (![self translationEnabled]) {
         self.translatedLines = @[];
         self.translationAttribution = @"";
+        self.translationErrorMessage = @"";
         [self notify];
         return;
     }
@@ -486,6 +491,7 @@ typedef void (^YTMULyricsTryProvidersCompletion)(YTMULyricsResult *_Nullable res
     if (sameLanguage) {
         self.translatedLines = @[];
         self.translationAttribution = @"";
+        self.translationErrorMessage = @"";
         YTMULyricsLog(@"translation skipped: source language matches target videoId=%@ source=%@ detected=%@ accuracy=%.2f target=%@",
                       info.videoId,
                       self.currentResult.sourceName,
@@ -535,6 +541,8 @@ typedef void (^YTMULyricsTryProvidersCompletion)(YTMULyricsResult *_Nullable res
             return;
         }
         if (error || translatedLines.count != sourceLines.count) {
+            self.translationErrorMessage = error.localizedDescription ?: @"Translation line count mismatch";
+            [self notify];
             YTMULyricsLog(@"translation failed for lyrics source=%@ videoId=%@ error=%@ returned=%lu expected=%lu",
                           self.currentResult.sourceName,
                           info.videoId,
@@ -544,6 +552,7 @@ typedef void (^YTMULyricsTryProvidersCompletion)(YTMULyricsResult *_Nullable res
             return;
         }
         self.translatedLines = translatedLines;
+        self.translationErrorMessage = @"";
         self.translationAttribution = [self translationProviderDisplayName];
         [self notify];
     }];
@@ -555,6 +564,7 @@ typedef void (^YTMULyricsTryProvidersCompletion)(YTMULyricsResult *_Nullable res
     self.currentResult = result;
     self.translatedLines = @[];
     self.translationAttribution = @"";
+    self.translationErrorMessage = @"";
     self.lastErrorMessage = @"";
     self.state = YTMULyricsFetchStateDone;
     YTMULyricsLog(@"lyrics ready videoId=%@ source=%@ title=%@ synced=%d lines=%lu",
@@ -933,6 +943,7 @@ static NSString *YTMULyricsAgeString(NSNumber *stamp) {
         self.currentResult = nil;
         self.translatedLines = @[];
         self.translationAttribution = @"";
+        self.translationErrorMessage = @"";
     }
     self.lastErrorMessage = @"";
     [self setStateAndNotify:YTMULyricsFetchStateFetching];

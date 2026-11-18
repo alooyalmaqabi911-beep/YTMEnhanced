@@ -11,6 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly, nullable) YTMULyricsResult *currentResult;
 @property (nonatomic, copy, readonly) NSArray<NSString *> *translatedLines;
 @property (nonatomic, copy, readonly) NSString *translationAttribution;
+@property (nonatomic, copy, readonly) NSString *translationErrorMessage;
 @property (nonatomic, copy, readonly) NSString *lastErrorMessage;
 @property (nonatomic, copy, readonly) NSDictionary<NSString *, NSString *> *sourceAvailability;
 

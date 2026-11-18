@@ -4,6 +4,7 @@
 #import "../Translation/YTMUTranslator.h"
 #import "../Translation/YTMUPromptBuilder.h"
 #import "../Translation/YTMUTranslationCache.h"
+#import "../Translation/Providers/YTMUGoogleTranslateProvider.h"
 #import "../Lyrics/YTMULyricsCache.h"
 #import "../Lyrics/YTMULyricsManager.h"
 #import "../Lyrics/YTMULyricsTitleNormalizer.h"
@@ -198,7 +199,7 @@
 
 - (NSArray<NSDictionary *> *)providerConfigRows {
     NSString *provider = [self currentProvider];
-    if ([provider isEqualToString:YTMUTranslationProviderGoogle]) return @[];
+    if ([provider isEqualToString:YTMUTranslationProviderGoogle]) return @[@{@"type": @"test"}];
     NSMutableArray *rows = [NSMutableArray array];
     [rows addObject:@{@"title": LOC(@"TRANSLATION_API_KEY"), @"key": [@"translationApiKey_" stringByAppendingString:provider], @"secure": @(YES), @"fallback": @""}];
     // Model is a tappable picker row (type=model): tapping fetches the
@@ -349,7 +350,7 @@
         }
         if ([row[@"type"] isEqualToString:@"test"]) {
             UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"modelTestCell"];
-            cell.textLabel.text = LOC(@"TRANSLATION_TEST_MODEL");
+            cell.textLabel.text = LOC([[self currentProvider] isEqualToString:YTMUTranslationProviderGoogle] ? @"TRANSLATION_TEST_GOOGLE" : @"TRANSLATION_TEST_MODEL");
             cell.textLabel.textColor = [UIColor systemBlueColor];
             cell.textLabel.textAlignment = NSTextAlignmentCenter;
             cell.imageView.image = [UIImage systemImageNamed:@"checkmark.seal"];
@@ -645,7 +646,44 @@
 // the model actually answers. This catches bad keys, wrong base URLs,
 // deprecated/unavailable model names, and relay misconfig before the
 // user discovers them mid-song.
+- (void)runGoogleTranslationTestAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
+    if ([cell.accessoryView isKindOfClass:UIActivityIndicatorView.class]) return;
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+    [spinner startAnimating];
+    cell.accessoryView = spinner;
+
+    YTMUTranslationRequest *request = [YTMUTranslationRequest new];
+    request.lines = @[@"Hello world", @"Good morning"];
+    request.title = @"";
+    request.artists = @[];
+    request.targetLanguageCode = [YTMUPromptBuilder effectiveTargetCode:[self stringSetting:@"translationTargetLang" fallback:@"ar"]];
+    // Bypass the song/failure cache so this reports the current provider response.
+    YTMUGoogleTranslateProvider *provider = [YTMUGoogleTranslateProvider new];
+    __weak typeof(self) weakSelf = self;
+    [provider translateRequest:request completion:^(NSArray<NSString *> *lines, NSError *error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            typeof(self) s = weakSelf;
+            if (!s) return;
+            // Do not clear another provider's control if the user changed providers while waiting.
+            if (cell.accessoryView == spinner) cell.accessoryView = nil;
+            BOOL ok = !error && lines.count == request.lines.count;
+            NSString *message = ok ? [lines componentsJoinedByString:@"\n"] :
+                [NSString stringWithFormat:@"%@\n%@ (%ld)", error.localizedDescription ?: @"Translation line count mismatch",
+                    error.domain ?: YTMUTranslationErrorDomain, (long)error.code];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:LOC(ok ? @"TRANSLATION_TEST_SUCCESS" : @"TRANSLATION_TEST_FAILED")
+                message:message preferredStyle:UIAlertControllerStyleAlert];
+            [alert addAction:[UIAlertAction actionWithTitle:LOC(@"DONE") style:UIAlertActionStyleDefault handler:nil]];
+            if (!s.presentedViewController) [s presentViewController:alert animated:YES completion:nil];
+        });
+    }];
+}
+
 - (void)runModelTestAtIndexPath:(NSIndexPath *)indexPath {
+    if ([[self currentProvider] isEqualToString:YTMUTranslationProviderGoogle]) {
+        [self runGoogleTranslationTestAtIndexPath:indexPath];
+        return;
+    }
     id<YTMULLMCompletionProvider> llm = [[YTMUTranslator sharedTranslator] currentLLMCompletionProvider];
     if (!llm) {
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:LOC(@"TRANSLATION_TEST_FAILED") message:LOC(@"TRANSLATION_TEST_NO_PROVIDER") preferredStyle:UIAlertControllerStyleAlert];

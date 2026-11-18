@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "Model is working";
 "TRANSLATION_TEST_FAILED" = "Test failed";
 "TRANSLATION_TEST_NO_PROVIDER" = "Select a provider and enter an API key first";
+
+"TRANSLATION_TEST_GOOGLE" = "Test translation";
+"TRANSLATION_ERROR_FORMAT" = "Translation unavailable: %@";

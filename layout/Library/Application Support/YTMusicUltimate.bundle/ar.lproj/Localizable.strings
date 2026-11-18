@@ -208,3 +208,6 @@
 "TRANSLATION_TEST_SUCCESS" = "النموذج يعمل";
 "TRANSLATION_TEST_FAILED" = "فشل الاختبار";
 "TRANSLATION_TEST_NO_PROVIDER" = "اختر مزوّدًا وأدخل مفتاح API أولاً";
+
+"TRANSLATION_TEST_GOOGLE" = "اختبار الترجمة";
+"TRANSLATION_ERROR_FORMAT" = "الترجمة غير متاحة: %@";
