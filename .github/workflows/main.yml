@@ -1,36 +1,5 @@
-name: Build and Release YTMEnhanced
-on:
-  workflow_dispatch:
-    inputs: 
-      ipa_url:
-        description: "URL to the decrypted IPA file"
-        default: ""
-        required: true
-        type: string
-
-      display_name:
-        description: "App Name (Optional)"
-        default: "YTMEnhanced"
-        required: true
-        type: string
-
-      bundle_id:
-        description: "BundleID (Optional)"
-        default: "com.py233.ytmenhanced"
-        required: true
-        type: string
-
-      changelog:
-        description: "Release changelog (optional; recent commits are used when empty)"
-        default: ""
-        required: false
-        type: string
-
-      create_release:
-        description: "Create a draft GitHub release"
-        default: false
-        required: true
-        type: boolean
+name: Build YTM Arabic manually
+on: workflow_dispatch
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,7 +10,7 @@ jobs:
     name: Build YTMEnhanced
     runs-on: macos-latest
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - name: Checkout Main
@@ -49,11 +18,6 @@ jobs:
         with:
           path: main
           submodules: recursive
-
-      - name: Hide sensitive inputs
-        uses: levibostian/action-hide-sensitive-inputs@v1
-        with:
-          exclude_inputs: bundle_id,display_name
 
       - name: Install Dependencies
         run: brew install make ldid pipx
@@ -100,7 +64,7 @@ jobs:
 
       - name: Download YouTube Music
         env:
-          IPA_URL: ${{ inputs.ipa_url }}
+          IPA_URL: "https://decrypt.stream/api/v1/download/com.google.ios.youtubemusic?region=us"
         run: |
           set -euo pipefail
 
@@ -148,6 +112,16 @@ jobs:
             curl -L --fail --retry 3 --retry-delay 2 -b cookies.txt "$confirm_url" -o ytm.ipa
           fi
 
+      - name: Verify inspected source IPA
+        run: |
+          echo "1732ff3d1d9564b7d37acb2a364a9968b094c7d6aa81584e4bbc4a63d7be77bf  ytm.ipa" | shasum -a 256 -c -
+
+      - name: Run lyrics and translation host tests
+        run: |
+          cd main
+          sed "s/arm64-apple-ios16.0-macabi/$(uname -m)-apple-ios16.0-macabi/" Tests/Host/run.sh > Tests/Host/run-ci.sh
+          XCODE="$(dirname "$(dirname "$(xcode-select -p)")")" bash Tests/Host/run-ci.sh
+
       - name: Validate IPA
         run: |
           file_type=$(file --mime-type -b ytm.ipa)
@@ -162,8 +136,8 @@ jobs:
           THEOS="${{ github.workspace }}/theos" CYAN=cyan scripts/build_sideload_ipa.sh \
             ../ytm.ipa \
             ../YTMEnhanced.ipa \
-            "${{ inputs.display_name }}" \
-            "${{ inputs.bundle_id }}"
+            "YTM Arabic" \
+            "com.alooyalmaqabi.ytmarabic"
 
       - name: Summarize IPA
         id: ipa
@@ -181,50 +155,3 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Prepare Release Notes
-        env:
-          CHANGELOG: ${{ inputs.changelog }}
-        run: |
-          set -euo pipefail
-          if [[ -n "$CHANGELOG" ]]; then
-            printf "%s\n" "$CHANGELOG" > RELEASE_NOTES.md
-          else
-            {
-              echo "### Changes"
-              git -C main log --pretty=format:'- %s (`%h`)' -20
-              echo
-            } > RELEASE_NOTES.md
-          fi
-          {
-            echo
-            echo "### Build"
-            echo "- Workflow run: ${{ github.run_number }}"
-            echo "- Commit: \`${{ github.sha }}\`"
-            echo "- IPA size: ${{ steps.ipa.outputs.size }} bytes"
-            echo "- SHA-256: \`${{ steps.ipa.outputs.sha256 }}\`"
-          } >> RELEASE_NOTES.md
-
-      - name: Get tweak version
-        if: ${{ inputs.create_release }}
-        id: ver
-        run: echo "v=$(grep '^PACKAGE_VERSION' main/Makefile | head -1 | awk '{print $3}')" >> "$GITHUB_OUTPUT"
-
-      - name: Create Release
-        if: ${{ inputs.create_release }}
-        uses: softprops/action-gh-release@v3.0.0
-        with:
-          tag_name: v${{ steps.ver.outputs.v }}
-          name: YTMEnhanced v${{ steps.ver.outputs.v }}
-          body_path: RELEASE_NOTES.md
-          files: YTMEnhanced.ipa
-          draft: true
-
-      - name: Output Release URL
-        if: ${{ inputs.create_release }}
-        run: |
-          echo "::notice::Release available at: https://github.com/${{ github.repository }}/releases"
-
-      - name: Output Artifact URL
-        if: ${{ !inputs.create_release }}
-        run: |
-          echo "::notice::Build artifact available at: ${{ steps.upload_ipa.outputs.artifact-url }}"
