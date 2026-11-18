@@ -12,13 +12,15 @@ PACKAGE_VERSION = 1.1.3
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = YTMusicUltimate
-$(TWEAK_NAME)_FILES = $(filter-out Source/Sideloading.x, $(shell find Source \( -name '*.x' -o -name '*.xm' -o -name '*.m' \)))
+$(TWEAK_NAME)_FILES = $(filter-out Source/Sideloading.x Source/SideloadedNowPlaying.m, $(shell find Source \( -name '*.x' -o -name '*.xm' -o -name '*.m' \)))
 $(TWEAK_NAME)_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -DTWEAK_VERSION=$(PACKAGE_VERSION)
 $(TWEAK_NAME)_FRAMEWORKS = UIKit Foundation AVFoundation AudioToolbox VideoToolbox NaturalLanguage MediaPlayer QuartzCore
 $(TWEAK_NAME)_OBJ_FILES = $(shell find Source/Utils/lib -name '*.a')
 $(TWEAK_NAME)_LIBRARIES = bz2 c++ iconv z
 ifeq ($(SIDELOADING),1)
 $(TWEAK_NAME)_FILES += Source/Sideloading.x
+$(TWEAK_NAME)_FILES += Source/SideloadedNowPlaying.m
+$(TWEAK_NAME)_CFLAGS += -DYTMU_SIDELOADING=1
 endif
 
 include $(THEOS_MAKE_PATH)/tweak.mk

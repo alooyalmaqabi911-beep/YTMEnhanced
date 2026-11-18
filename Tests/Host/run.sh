@@ -29,6 +29,7 @@ SOURCES=(
   Source/Scrobbling/*.m
   Source/Scrobbling/Providers/*.m
   Source/Utils/*.m
+  Source/SideloadedNowPlaying.m
   Tests/Host/*.m
 )
 

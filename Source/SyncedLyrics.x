@@ -11,6 +11,7 @@
 #import "Lyrics/YTMUInnerTubeDescriptionFetcher.h"
 #import "Utils/YTMUKVC.h"
 #import "Utils/YTMUSettings.h"
+#import "SideloadedNowPlaying.h"
 
 
 
@@ -807,10 +808,12 @@ static void YTMUInstallDynamicHooks(void) {
     YTMULyricsLog(@"hook didActivateVideo class=%@", NSStringFromClass([self class]));
     YTMUHandlePlayerCandidate(self, @"YTPlayerViewController.didActivateVideo", YES);
     YTMUSponsorBlockVideoDidActivate(self);
+    YTMUSideloadedNowPlayingUpdate(self, YES);
 }
 
 - (void)singleVideo:(id)video currentVideoTimeDidChange:(id)time {
     %orig;
+    YTMUSideloadedNowPlayingUpdate(self, NO);
     NSTimeInterval timeMs = YTMUNormalizedPlaybackTimeMs(self);
     [[YTMULyricsPlaybackState sharedState] notePlayerViewController:self];
     [[YTMULyricsPlaybackState sharedState] notePlaybackTimeMs:timeMs];
@@ -818,6 +821,7 @@ static void YTMUInstallDynamicHooks(void) {
 
 - (void)potentiallyMutatedSingleVideo:(id)video currentVideoTimeDidChange:(id)time {
     %orig;
+    YTMUSideloadedNowPlayingUpdate(self, NO);
     NSTimeInterval timeMs = YTMUNormalizedPlaybackTimeMs(self);
     [[YTMULyricsPlaybackState sharedState] notePlayerViewController:self];
     [[YTMULyricsPlaybackState sharedState] notePlaybackTimeMs:timeMs];
