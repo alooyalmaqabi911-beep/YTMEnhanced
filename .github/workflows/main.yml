@@ -1,4 +1,4 @@
-name: Build YTM Arabic manually
+name: Build YTM Arabic locally mergeable tweak
 on: workflow_dispatch
 
 concurrency:
@@ -57,101 +57,21 @@ jobs:
           mkdir -p "$THEOS/sdks"
           mv *.sdk $THEOS/sdks
 
-      - name: Install cyan
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          pipx install --force https://github.com/asdfzxcvbn/pyzule-rw/archive/main.zip
-
-      - name: Download YouTube Music
-        env:
-          IPA_URL: "https://decrypt.stream/api/v1/download/com.google.ios.youtubemusic?region=us"
-        run: |
-          set -euo pipefail
-
-          url="$IPA_URL"
-          if [[ "$url" =~ drive\.google\.com/file/d/([^/]+) ]]; then
-            url="https://drive.google.com/uc?export=download&id=${BASH_REMATCH[1]}"
-          fi
-
-          curl -L --fail --retry 3 --retry-delay 2 -c cookies.txt -b cookies.txt "$url" -o ytm.ipa
-          file_type=$(file --mime-type -b ytm.ipa)
-          if [[ "$file_type" == "text/html" ]] && grep -qi "Google Drive" ytm.ipa; then
-            confirm_url=$(python3 - <<'PY'
-          from html.parser import HTMLParser
-          from pathlib import Path
-          from urllib.parse import urlencode
-
-          class DownloadFormParser(HTMLParser):
-              def __init__(self):
-                  super().__init__()
-                  self.in_download_form = False
-                  self.action = ""
-                  self.inputs = {}
-
-              def handle_starttag(self, tag, attrs):
-                  attrs = dict(attrs)
-                  if tag == "form" and attrs.get("id") == "download-form":
-                      self.in_download_form = True
-                      self.action = attrs.get("action", "")
-                  elif tag == "input" and self.in_download_form:
-                      name = attrs.get("name")
-                      if name:
-                          self.inputs[name] = attrs.get("value", "")
-
-              def handle_endtag(self, tag):
-                  if tag == "form":
-                      self.in_download_form = False
-
-          parser = DownloadFormParser()
-          parser.feed(Path("ytm.ipa").read_text(errors="replace"))
-          if not parser.action or not parser.inputs:
-              raise SystemExit("Google Drive confirmation form not found")
-          print(f"{parser.action}?{urlencode(parser.inputs)}")
-          PY
-          )
-            curl -L --fail --retry 3 --retry-delay 2 -b cookies.txt "$confirm_url" -o ytm.ipa
-          fi
-
-      - name: Verify inspected source IPA
-        run: |
-          echo "1732ff3d1d9564b7d37acb2a364a9968b094c7d6aa81584e4bbc4a63d7be77bf  ytm.ipa" | shasum -a 256 -c -
-
       - name: Run lyrics and translation host tests
         run: |
           cd main
           sed "s/arm64-apple-ios16.0-macabi/$(uname -m)-apple-ios16.0-macabi/" Tests/Host/run.sh > Tests/Host/run-ci.sh
           XCODE="$(dirname "$(dirname "$(xcode-select -p)")")" bash Tests/Host/run-ci.sh
 
-      - name: Validate IPA
-        run: |
-          file_type=$(file --mime-type -b ytm.ipa)
-          if [[ "$file_type" != "application/x-ios-app" && "$file_type" != "application/zip" ]]; then
-            echo "::error::Validation failed: The file is not a valid IPA file. Detected type: $file_type."
-            exit 1
-          fi
-
-      - name: Build and Inject Tweak
+      - name: Build Arabic sideloading tweak
         run: |
           cd main
-          THEOS="${{ github.workspace }}/theos" CYAN=cyan scripts/build_sideload_ipa.sh \
-            ../ytm.ipa \
-            ../YTMEnhanced.ipa \
-            "YTM Arabic" \
-            "com.alooyalmaqabi.ytmarabic"
+          make clean package SIDELOADING=1 FINALPACKAGE=1 DEBUG=0
 
-      - name: Summarize IPA
-        id: ipa
-        run: |
-          set -euo pipefail
-          echo "sha256=$(shasum -a 256 YTMEnhanced.ipa | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-          echo "size=$(stat -f%z YTMEnhanced.ipa)" >> "$GITHUB_OUTPUT"
-
-      - name: Upload IPA Artifact
-        id: upload_ipa
+      - name: Upload Arabic tweak
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: YTMEnhanced-${{ github.run_number }}
-          path: YTMEnhanced.ipa
+          name: YTM-Arabic-Tweak
+          path: main/packages/*.deb
           if-no-files-found: error
           retention-days: 1
-
